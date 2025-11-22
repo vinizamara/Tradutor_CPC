@@ -3,14 +3,14 @@ import logic_processor as lp
 from streamlit_option_menu import option_menu
 import re
 
-# configuração da página
+# Configuração inicial da página
 st.set_page_config(
   page_title="Agente de IA Lógico",
   page_icon="🤖",
   layout="centered"
 )
 
-# BLOQUEIA QUALQUER TRADUÇÃO DO NAVEGADOR
+# Força o navegador a não traduzir o conteúdo da interface
 st.markdown("""
 <meta name="google" content="notranslate">
 <style>
@@ -19,8 +19,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
-# função de injetar CSS seguro
+# Carrega e aplica estilos visuais personalizados
 def load_css():
     st.markdown("""
     <style>
@@ -51,7 +50,7 @@ def load_css():
             font-size: 1.1rem;
         }
 
-        /* remove bordas invasivas */
+        /* Remove bordas decorativas dos containers */
         [data-testid="stVerticalBlockBorderWrapper"] {
             border: none !important;
             padding: 0 !important;
@@ -65,14 +64,14 @@ load_css()
 st.title("Tradutor - Agente de IA", anchor=False)
 st.caption("Projeto acadêmico de IA - Uni-FACEF")
 
-# checagem da API
+# Carrega chave da API (se disponível no secrets)
 try:
     api_key = st.secrets["GOOGLE_API_KEY"]
 except:
     st.error("Chave de API do Google Gemini não encontrada!")
     api_key = None
 
-# seletor dos modos
+# Menu para alternar entre os modos de tradução
 selected_mode = option_menu(
   menu_title=None, 
   options=["Português ⭢ Lógica", "Lógica ⭢ Português"],
@@ -88,12 +87,12 @@ selected_mode = option_menu(
 st.write("---")
 
 # ============================================================
-# MODO 1 — Português → Lógica
+# MODO 1 — Tradução de Português → Lógica (CPC)
 # ============================================================
 
 if selected_mode == "Português ⭢ Lógica":
   
-    st.markdown("Esse modo traduz da linguagem humana para a linguagem formal do Cálculo Proposicional Clássico (CPC).")
+    st.markdown("Esse modo converte frases em Português para fórmulas do Cálculo Proposicional Clássico.")
     st.subheader("Insira a sentença")
 
     nl_input = st.text_area(
@@ -103,7 +102,7 @@ if selected_mode == "Português ⭢ Lógica":
         height=80
     )
 
-    # 🔵 BOTÃO - apenas chama a IA e salva o resultado no estado
+    # Aciona a função de tradução e grava o resultado no estado
     if st.button("Traduzir para CPC", key="btn_nl_translate", disabled=(api_key is None), use_container_width=True):
         if not nl_input:
             st.warning("Por favor, insira uma sentença.")
@@ -115,7 +114,7 @@ if selected_mode == "Português ⭢ Lógica":
                 except Exception as e:
                     st.error(f"Erro inesperado: {e}")
 
-    # 🔵 FORMULÁRIO — aparece fora do botão
+    # Exibe o resultado da tradução caso exista
     if "nl_result" in st.session_state:
 
         result = st.session_state["nl_result"]
@@ -129,19 +128,17 @@ if selected_mode == "Português ⭢ Lógica":
             st.code(result.get("formula"), language="plaintext")
 
             st.markdown("**Significados das proposições:**")
-
             propositions = result.get("propositions", {}) or {}
-
             for key, value in propositions.items():
                 st.markdown(f"- **{key}** = {value}")
 
 # ============================================================
-# MODO 2 — Lógica → Português
+# MODO 2 — Tradução de Lógica → Português
 # ============================================================
 
 if selected_mode == "Lógica ⭢ Português":
   
-    st.markdown("Esse modo traduz fórmulas de lógica proposicional para frases em Português.")
+    st.markdown("Esse modo converte fórmulas de lógica proposicional para frases em Português.")
     st.subheader("Insira a fórmula lógica")
 
     cpc_input = st.text_area(
@@ -151,7 +148,7 @@ if selected_mode == "Lógica ⭢ Português":
         height=80
     )
 
-    # BOTÃO — apenas obtém variáveis e salva o estado
+    # Extrai variáveis presentes na fórmula e salva no estado
     if st.button("Traduzir para Português", key="btn_cpc", disabled=(api_key is None), use_container_width=True):
         if not cpc_input:
             st.error("Por favor, insira uma fórmula.")
@@ -163,7 +160,7 @@ if selected_mode == "Lógica ⭢ Português":
                 st.session_state["cpc_vars"] = variables
                 st.session_state["cpc_formula"] = cpc_input
 
-    # FORMULÁRIO — aparece fora do botão
+    # Formulário de definição dos significados das proposições
     if "cpc_vars" in st.session_state:
 
         vars = st.session_state["cpc_vars"]
@@ -180,8 +177,9 @@ if selected_mode == "Lógica ⭢ Português":
             if val.strip():
                 user_map[var] = val.strip()
 
-        st.caption("Se algum campo ficar vazio, a IA irá sugerir automaticamente.")
+        st.caption("Se algum campo estiver vazio, a IA poderá sugerir automaticamente.")
 
+        # Gera a frase em português com base na fórmula e no mapa fornecido
         if st.button("Gerar frase", key="btn_generate_pt"):
             with st.spinner("Gerando sentença..."):
                 try:
@@ -204,14 +202,16 @@ if selected_mode == "Lógica ⭢ Português":
                         for k, v in final_map.items():
                             st.markdown(f"- **{k}** = {v}")
 
+                        # Salva significados para reutilização futura
                         st.session_state["mapping"] = {**saved_map, **final_map}
 
                 except Exception as e:
                     st.error(f"Erro inesperado: {e}")
 
     # ---------------------------------------------------------
-    # 🔥 SINTAXE ACEITA (AGORA SOMENTE NO MODO 2)
+    # Tabela de operadores aceitos pelo tradutor
     # ---------------------------------------------------------
+
     st.subheader("Sintaxe Aceita:")
     syntax_data = [
         ("E (AND)", "&", "∧"),

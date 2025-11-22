@@ -8,174 +8,216 @@ import re
 import streamlit as st
 
 
-# modo 1 - português -> lógica (gemini)
+# ============================================================
+# MODO 1 — Tradução de Português → Lógica (CPC)
+# ============================================================
+
 @st.cache_data
 def translate_nl_to_cpc(sentence: str, api_key: str) -> dict:
-  try:
-    genai.configure(api_key=api_key)
-    
-    generation_config = {
-      "temperature": 0.1,
-      "response_mime_type": "application/json", 
-    }
-    
-    model = genai.GenerativeModel(
-      model_name="models/gemini-flash-latest",
-      generation_config=generation_config,
-    )
-
-    prompt_template = f"""
-    Sua tarefa é atuar como um especialista em lógica proposicional.
-    Traduza a seguinte sentença em português para uma fórmula de Cálculo Proposicional Clássico (CPC).
-
-    Regras de Formatação da Saída:
-    1.  Use 'P', 'Q', 'R', etc., para as proposições atômicas.
-    2.  Use os seguintes símbolos para os conectivos:
-        - E (and): &
-        - OU (or): |
-        - NÃO (not): ~
-        - IMPLICA (if... then...): ->
-        - SE E SOMENTE SE (iff): <->
-    3.  Retorne a resposta APENAS no seguinte formato JSON.
-    
-    Exemplo de JSON:
-    {{
-      "formula": "P -> (Q | R)",
-      "propositions": {{
-        "P": "significado de P",
-        "Q": "significado de Q",
-        "R": "significado de R"
-      }}
-    }}
-
-    Sentença de Entrada para Traduzir:
-    "{sentence}"
-    
-    JSON de Saída:
     """
+    Converte uma sentença em Português para uma fórmula de Lógica Proposicional (CPC)
+    utilizando o modelo Gemini.
     
-    response = model.generate_content(prompt_template)
-    cleaned_response = response.text.strip().replace("```json\n", "").replace("\n```", "")
-    result_dict = json.loads(cleaned_response)
-    
-    return result_dict
+    A resposta é estruturada em JSON contendo:
+    - formula: expressão lógica usando &, |, ~, ->, <-> 
+    - propositions: mapeamento de proposições (P, Q, R...) para seus significados
+    """
+    try:
+        genai.configure(api_key=api_key)
 
-  except Exception as e:
-    print(f"Erro na API do Gemini: {e}")
-    return {"error": str(e)}
+        generation_config = {
+            "temperature": 0.1,
+            "response_mime_type": "application/json",
+        }
+
+        model = genai.GenerativeModel(
+            model_name="models/gemini-flash-latest",
+            generation_config=generation_config,
+        )
+
+        # Prompt especificando regras formais para a saída
+        prompt_template = f"""
+        Sua tarefa é atuar como um especialista em lógica proposicional.
+        Traduza a seguinte sentença em português para uma fórmula de Cálculo Proposicional Clássico (CPC).
+
+        Regras de Formatação da Saída:
+        1. Use 'P', 'Q', 'R', etc.
+        2. Conectivos aceitos:
+           &  (E), | (OU), ~ (NÃO), -> (IMPLICA), <-> (SE E SOMENTE SE)
+        3. Retorne somente o JSON especificado.
+
+        JSON de exemplo:
+        {{
+          "formula": "P -> (Q | R)",
+          "propositions": {{
+            "P": "significado de P",
+            "Q": "significado de Q",
+            "R": "significado de R"
+          }}
+        }}
+
+        Sentença de Entrada:
+        "{sentence}"
+
+        JSON de Saída:
+        """
+
+        response = model.generate_content(prompt_template)
+
+        # Limpeza do bloco JSON retornado
+        cleaned_response = (
+            response.text.strip()
+            .replace("```json\n", "")
+            .replace("\n```", "")
+        )
+
+        return json.loads(cleaned_response)
+
+    except Exception as e:
+        print(f"Erro na API do Gemini: {e}")
+        return {"error": str(e)}
 
 
-# modo 2 - lógica -> português (gemini)
+# ============================================================
+# Preparação de operadores para parsing (Modo 2)
+# ============================================================
+
 try:
-  _A, _B = sympy.symbols('A B')
-  OPERADOR_RSHIFT = sympy.sympify('_A >> _B').func
-  OPERADOR_MOD = sympy.sympify('_A % _B').func
+    _A, _B = sympy.symbols('A B')
+    OPERADOR_RSHIFT = sympy.sympify('_A >> _B').func   # usado para →
+    OPERADOR_MOD = sympy.sympify('_A % _B').func       # usado para ↔
 except Exception:
-  OPERADOR_RSHIFT = None
-  OPERADOR_MOD = None
+    OPERADOR_RSHIFT = None
+    OPERADOR_MOD = None
 
+
+# ============================================================
+# Extrai variáveis de uma fórmula lógica
+# ============================================================
 
 @st.cache_data
 def get_variables_from_formula(formula_str: str) -> set:
-  if not formula_str:
-    return set()
+    """
+    Recebe uma fórmula lógica e retorna o conjunto de variáveis encontradas.
+    Aceita tanto ASCII (&, |, ->) quanto símbolos Unicode (∧, ∨, →).
+    """
+    if not formula_str:
+        return set()
 
-  try:
-    processed_str = formula_str.replace("∧", "&") \
-                               .replace("∨", "|") \
-                               .replace("¬", "~") \
-                               .replace("→", "->") \
-                               .replace("↔", "<->") \
-                               .replace("<->", "%") \
-                               .replace("->", ">>")
+    try:
+        # Converte conectivos Unicode para ASCII intermediários
+        processed_str = (
+            formula_str.replace("∧", "&")
+                       .replace("∨", "|")
+                       .replace("¬", "~")
+                       .replace("→", "->")
+                       .replace("↔", "<->")
+                       .replace("<->", "%")     # operador equivalente
+                       .replace("->", ">>")     # operador implica
+        )
 
-    symbol_names = sorted(list(set(re.findall(r'[A-Z]', formula_str))))
-    symbols_dict = {}
-    if symbol_names:
-      for name in symbol_names:
-        symbols_dict[name] = sympy.symbols(name)
-    
-    parsed_formula = sympy.sympify(processed_str, locals=symbols_dict)
-        
-    if OPERADOR_RSHIFT and ">>" in processed_str:
-      parsed_formula = parsed_formula.subs(OPERADOR_RSHIFT, Implies)
-    if OPERADOR_MOD and "%" in processed_str:
-      parsed_formula = parsed_formula.subs(OPERADOR_MOD, Equivalent)
-        
-    atoms = parsed_formula.atoms(sympy.Symbol)
-    
-    return {str(atom) for atom in atoms}
-  
-  except Exception as e:
-    print(f"Erro ao parsear a fórmula: {e}")
-    return set() 
+        # Identifica proposições maiúsculas (P, Q, R...)
+        symbol_names = sorted(list(set(re.findall(r'[A-Z]', formula_str))))
+        symbols_dict = {name: sympy.symbols(name) for name in symbol_names}
+
+        # Interpreta a expressão usando SymPy
+        parsed_formula = sympy.sympify(processed_str, locals=symbols_dict)
+
+        # Substitui operadores intermediários pelos operadores lógicos corretos
+        if OPERADOR_RSHIFT and ">>" in processed_str:
+            parsed_formula = parsed_formula.subs(OPERADOR_RSHIFT, Implies)
+        if OPERADOR_MOD and "%" in processed_str:
+            parsed_formula = parsed_formula.subs(OPERADOR_MOD, Equivalent)
+
+        # Retorna apenas símbolos atômicos encontrados
+        atoms = parsed_formula.atoms(sympy.Symbol)
+        return {str(atom) for atom in atoms}
+
+    except Exception as e:
+        print(f"Erro ao parsear a fórmula: {e}")
+        return set()
+
+
+# ============================================================
+# MODO 2 — Tradução de Lógica → Português (CPC → NL)
+# ============================================================
 
 @st.cache_data
 def translate_cpc_to_nl_AI(formula_str: str, api_key: str, user_propositions: dict = None) -> dict:
-  """
-  Gera frase em português a partir de fórmula CPC.
-  - Se user_propositions for fornecido (ex: {"P": "chover", "Q": "fazer frio"}),
-    instruímos o modelo a usar essas proposições na geração.
-  - Se user_propositions for None ou vazio, o modelo inventa proposições coerentes.
-  """
-  try:
-    genai.configure(api_key=api_key)
-    
-    generation_config = {
-      "temperature": 0.7, 
-      "response_mime_type": "application/json",
-    }
-    
-    model = genai.GenerativeModel(
-      model_name="models/gemini-flash-latest",
-      generation_config=generation_config,
-    )
-    
-    # Se o usuário forneceu um mapeamento, converta em texto para incluir no prompt
-    user_map_txt = ""
-    if user_propositions:
-      # Garantir ordem previsível
-      items = [f'"{k}": "{v}"' for k, v in sorted(user_propositions.items())]
-      user_map_txt = "Usar este mapeamento de proposições fornecido pelo usuário:\n" + "{ " + ", ".join(items) + " }\n\n"
-    else:
-      user_map_txt = "Se o usuário não fornecer significados, invente proposições coerentes.\n\n"
-
-    prompt_template = f"""
-    Sua tarefa é atuar como um professor de lógica criativo.
-    Você receberá uma fórmula de Cálculo Proposicional Clássico (CPC).
-
-    {user_map_txt}
-    Sua missão é:
-    1.  Analisar a fórmula: {formula_str}
-    2.  Se o usuário forneceu um mapeamento (acima), UTILIZE EXATAMENTE essas proposições (P, Q, R, ...) para construir uma frase em português que corresponda à fórmula.
-    3.  Se o usuário NÃO forneceu mapeamento, invente um conjunto de proposições simples e coerentes (P, Q, R, etc.) do mundo real, em português do Brasil.
-    4.  Usar as proposições para construir uma única frase de exemplo, em português, que corresponda perfeitamente à estrutura lógica da fórmula.
-    5.  A frase deve ser natural e fácil de entender.
-
-    Retorne a resposta APENAS no seguinte formato JSON:
-    {{
-      "sentence": "Sua frase de exemplo coerente aqui.",
-      "propositions": {{
-        "P": "O que P significa (ex: chover)",
-        "Q": "O que Q significa (ex: fizer frio)",
-        "R": "O que R significa (ex: a aula será cancelada)"
-      }}
-    }}
-
-    (Se a fórmula tiver ~S, a proposição 'S' deve ser a versão positiva. Ex: S = "Eu vou sair")
-
-    Fórmula de Entrada:
-    "{formula_str}"
-
-    JSON de Saída:
     """
-    
-    response = model.generate_content(prompt_template)
-    cleaned_response = response.text.strip().replace("```json\n", "").replace("\n```", "")
-    result_dict = json.loads(cleaned_response)
-    
-    return result_dict
+    Converte uma fórmula de Lógica Proposicional (CPC) em uma frase em Português.
 
-  except Exception as e:
-    print(f"Erro na API do Gemini (Modo 2): {e}")
-    return {"error": str(e)}
+    Se user_propositions for fornecido:
+        - O modelo deve usar exatamente essas definições ao montar a frase.
+
+    Caso contrário:
+        - O modelo cria proposições coerentes e as utiliza na geração da frase.
+
+    Retorno em JSON inclui:
+    - sentence: frase final em português
+    - propositions: proposições usadas e seus significados
+    """
+    try:
+        genai.configure(api_key=api_key)
+
+        generation_config = {
+            "temperature": 0.7,
+            "response_mime_type": "application/json",
+        }
+
+        model = genai.GenerativeModel(
+            model_name="models/gemini-flash-latest",
+            generation_config=generation_config,
+        )
+
+        # Texto explicando o mapa fornecido pelo usuário (se existir)
+        if user_propositions:
+            items = [f'"{k}": "{v}"' for k, v in sorted(user_propositions.items())]
+            user_map_txt = (
+                "Usar o seguinte mapeamento de proposições fornecido pelo usuário:\n"
+                + "{ " + ", ".join(items) + " }\n\n"
+            )
+        else:
+            user_map_txt = "Se o usuário não fornecer significados, crie proposições coerentes.\n\n"
+
+        # Prompt detalhado
+        prompt_template = f"""
+        Sua tarefa é atuar como um professor de lógica criativo.
+        Você receberá uma fórmula de Cálculo Proposicional Clássico (CPC).
+
+        {user_map_txt}
+
+        Instruções:
+        1. Analise a fórmula: {formula_str}
+        2. Use o mapeamento fornecido (se houver).
+        3. Caso contrário, crie proposições simples e coerentes.
+        4. Gere uma frase natural em português que represente fielmente a estrutura lógica.
+        5. Retorne APENAS o JSON no formato especificado:
+
+        {{
+          "sentence": "Frase construída",
+          "propositions": {{
+            "P": "Significado de P",
+            "Q": "Significado de Q"
+          }}
+        }}
+
+        Fórmula:
+        "{formula_str}"
+
+        JSON de Saída:
+        """
+
+        response = model.generate_content(prompt_template)
+
+        cleaned_response = (
+            response.text.strip()
+            .replace("```json\n", "")
+            .replace("\n```", "")
+        )
+
+        return json.loads(cleaned_response)
+
+    except Exception as e:
+        print(f"Erro na API do Gemini (Modo 2): {e}")
+        return {"error": str(e)}
