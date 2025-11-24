@@ -14,9 +14,13 @@ A aplicação usa SymPy, Streamlit e o modelo Gemini (Google Generative AI) para
 
 ### ✔️ 1. Desenho da arquitetura do sistema e explicação de funcionamento.
 A arquitetura do sistema segue um modelo híbrido combinando:
+
 Processamento simbólico local (via SymPy)
+
 Tradução semântica com LLMs (via Gemini – Google Generative AI)
+
 Interface reativa e cacheamento (via Streamlit)
+
 Módulo unificado de orquestração (logic_processor.py)
 
 ### 🔷 Visão geral da arquitetura
@@ -80,7 +84,7 @@ mapeamento final de proposições.
 
 ---
 
-## ✔️ 2. Estratégia de tradução (regras, mapeamento, uso de LLMs) e exemplos com análise.
+### ✔️ 2. Estratégia de tradução (regras, mapeamento, uso de LLMs) e exemplos com análise.
 O sistema combina tradução baseada em regras com geração neural controlada (LLM).
 
 ### 🔷 Estratégia no modo NL → CPC
