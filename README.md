@@ -19,7 +19,7 @@ Tradução semântica com LLMs (via Gemini – Google Generative AI)
 Interface reativa e cacheamento (via Streamlit)
 Módulo unificado de orquestração (logic_processor.py)
 
-🔷 Visão geral da arquitetura
+### 🔷 Visão geral da arquitetura
 ```
 +---------------------------------------------------------------+
 |                         Interface (UI)                       |
@@ -50,7 +50,7 @@ Módulo unificado de orquestração (logic_processor.py)
 | - Extração de proposições                                     |
 +---------------------------------------------------------------+
 ```
-🔷 Funcionamento resumido
+### 🔷 Funcionamento resumido
 Modo 1 — Português → Lógica (NL → CPC)
 Usuário digita uma sentença em português.
 O sistema envia para Gemini um prompt altamente restrito que:
@@ -83,7 +83,7 @@ mapeamento final de proposições.
 ✔️ 2. Estratégia de tradução (regras, mapeamento, uso de LLMs) e exemplos com análise.
 O sistema combina tradução baseada em regras com geração neural controlada (LLM).
 
-🔷 Estratégia no modo NL → CPC
+### 🔷 Estratégia no modo NL → CPC
 Regras explícitas usadas:
 Proposições devem ser letras maiúsculas únicas.
 Conectivos obrigatórios:
@@ -125,7 +125,7 @@ Possíveis erros
 Criar conectivos desnecessários (“João estuda e João passa”).
 Ambiguidade com pronomes (ele → outro sujeito).
 
-🔷 Estratégia no modo CPC → NL
+### 🔷 Estratégia no modo CPC → NL
 Regras implementadas:
 Parsing completo com SymPy, aceitando:
 ASCII (->, <->)
@@ -164,7 +164,7 @@ Criar significados de proposições muito genéricos ou redundantes.
 ---
 
 ✔️ 3. Discussão sobre limitações e possibilidades de melhoria.
-🔷 Limitações do sistema atual
+### 🔷 Limitações do sistema atual
 1. Dependência total de LLM para a tradução semântica
 Não há regras formais garantidas para assegurar que a fórmula traduzida represente exatamente o que o usuário quis dizer.
 LLM pode inventar proposições ou alterar nuances semânticas.
@@ -190,7 +190,7 @@ A conversão manual poderia falhar para fórmulas com caracteres menos comuns.
 6. Cache baseado em Streamlit
 Útil, mas não adequado para ambientes de produção real (multiusuário).
 
-🔷 Possibilidades de melhoria
+### 🔷 Possibilidades de melhoria
 1. Implementar um módulo de desambiguação linguística
 Uso de NLP tradicional (spaCy, Stanza) para identificar:
 sujeito,
