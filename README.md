@@ -13,14 +13,11 @@ A aplicação usa SymPy, Streamlit e o modelo Gemini (Google Generative AI) para
 ---
 
 ### ✔️ 1. Desenho da arquitetura do sistema e explicação de funcionamento.
+
 A arquitetura do sistema segue um modelo híbrido combinando:
-
 Processamento simbólico local (via SymPy)
-
 Tradução semântica com LLMs (via Gemini – Google Generative AI)
-
 Interface reativa e cacheamento (via Streamlit)
-
 Módulo unificado de orquestração (logic_processor.py)
 
 ### 🔷 Visão geral da arquitetura
