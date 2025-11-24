@@ -220,10 +220,9 @@ benchmarks de lógica.
 
 ---
 
-###🎥 Demonstração em Vídeo
-Link do vídeo demonstrando o uso do Agente de IA:
-➡️ https://www.youtube.com/watch?v=2OQvOgXMn2M
+### 🎥 Demonstração em Vídeo
+- Link do vídeo demonstrando o uso do Agente de IA: https://www.youtube.com/watch?v=2OQvOgXMn2M
 
-###🚀 Teste Agora
-Experimente o sistema funcionando em tempo real:
-🔗 https://cpctranslator.streamlit.app/
+### 🚀 Teste Agora
+- Experimente o sistema funcionando em tempo real: https://cpctranslator.streamlit.app/
+
