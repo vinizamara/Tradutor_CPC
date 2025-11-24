@@ -2,7 +2,9 @@
 
 Este repositório contém um módulo em Python que implementa dois modos principais de conversão entre linguagem natural em português e fórmulas de Lógica Proposicional Clássica (CPC).
 A aplicação usa SymPy, Streamlit e o modelo Gemini (Google Generative AI) para conduzir traduções precisas e estruturadas.
+
 ---
+
 ✔️ 1. Desenho da arquitetura do sistema e explicação de funcionamento.
 A arquitetura do sistema segue um modelo híbrido combinando:
 Processamento simbólico local (via SymPy)
@@ -68,7 +70,9 @@ Um pedido para gerar frase natural em português.
 O Gemini retorna JSON estruturado, com:
 frase em PT-BR,
 mapeamento final de proposições.
+
 ---
+
 ✔️ 2. Estratégia de tradução (regras, mapeamento, uso de LLMs) e exemplos com análise.
 O sistema combina tradução baseada em regras com geração neural controlada (LLM).
 
@@ -149,7 +153,9 @@ Erros típicos:
 Inserir ordem temporal inexistente ("antes", "depois").
 Traduzir equivalência <-> como causalidade “porque”.
 Criar significados de proposições muito genéricos ou redundantes.
+
 ---
+
 ✔️ 3. Discussão sobre limitações e possibilidades de melhoria.
 🔷 Limitações do sistema atual
 1. Dependência total de LLM para a tradução semântica
@@ -210,7 +216,9 @@ Comparação sistemática entre:
 fórmulas produzidas,
 traduções inversas,
 benchmarks de lógica.
+
 ---
+
 🎥 Demonstração em Vídeo
 Link do vídeo demonstrando o uso do Agente de IA:
 ➡️ https://www.youtube.com/watch?v=2OQvOgXMn2M
