@@ -13,11 +13,14 @@ A aplicação usa SymPy, Streamlit e o modelo Gemini (Google Generative AI) para
 ---
 
 ### ✔️ 1. Desenho da arquitetura do sistema e explicação de funcionamento.
-
 A arquitetura do sistema segue um modelo híbrido combinando:
+
 Processamento simbólico local (via SymPy)
+
 Tradução semântica com LLMs (via Gemini – Google Generative AI)
+
 Interface reativa e cacheamento (via Streamlit)
+
 Módulo unificado de orquestração (logic_processor.py)
 
 ### 🔷 Visão geral da arquitetura
@@ -53,13 +56,21 @@ Módulo unificado de orquestração (logic_processor.py)
 ```
 ### 🔷 Funcionamento resumido
 Modo 1 — Português → Lógica (NL → CPC)
+
 Usuário digita uma sentença em português.
+
 O sistema envia para Gemini um prompt altamente restrito que:
+
 exige JSON,
+
 exige a fórmula no padrão (&, |, ~, ->, <->),
+
 exige proposições formais (P, Q, R...).
+
 A resposta é limpa e convertida para dict Python.
+
 A SymPy não é utilizada nesse modo, pois aqui só recebemos a fórmula já simbólica.
+
 O sistema retorna:
 
 {
@@ -72,11 +83,17 @@ Usuário fornece fórmula simbólica, possivelmente com Unicode (→, ∧, ¬).
 A função get_variables_from_formula converte Unicode → ASCII, detecta símbolos com regex e faz parsing com SymPy.
 
 O sistema envia ao Gemini um prompt que inclui:
+
 A fórmula já depurada.
+
 Um mapeamento dado pelo usuário (opcional).
+
 Um pedido para gerar frase natural em português.
+
 O Gemini retorna JSON estruturado, com:
+
 frase em PT-BR,
+
 mapeamento final de proposições.
 
 ---
@@ -86,7 +103,9 @@ O sistema combina tradução baseada em regras com geração neural controlada (
 
 ### 🔷 Estratégia no modo NL → CPC
 Regras explícitas usadas:
+
 Proposições devem ser letras maiúsculas únicas.
+
 Conectivos obrigatórios:
 
 & (E)
@@ -102,9 +121,13 @@ Conectivos obrigatórios:
 Saída obrigatoriamente em JSON.
 
 O LLM atua como:
+
 extrator de proposições,
+
 mapeador semântico → fórmulas,
+
 gerador de estrutura formal.
+
 Exemplo realista
 
 Input:
@@ -128,18 +151,27 @@ Ambiguidade com pronomes (ele → outro sujeito).
 
 ### 🔷 Estratégia no modo CPC → NL
 Regras implementadas:
+
 Parsing completo com SymPy, aceitando:
+
 ASCII (->, <->)
+
 Unicode (→, ¬, ∨, etc.)
+
 Conversão prévia de operadores (>> para Implies, % para Equivalent).
+
 Extração de variáveis via regex [A-Z].
 
 O LLM atua como:
+
 gerador de frase com preservação da estrutura lógica,
+
 parafraseador natural,
+
 expansor de significados.
 
 Exemplo realista:
+
 Input:
 ~P | (Q -> R)
 Sem mapeamento fornecido.
