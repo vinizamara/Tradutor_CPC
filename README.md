@@ -4,6 +4,12 @@
 Este repositório contém um módulo em Python que implementa dois modos principais de conversão entre linguagem natural em português e fórmulas de Lógica Proposicional Clássica (CPC).
 A aplicação usa SymPy, Streamlit e o modelo Gemini (Google Generative AI) para conduzir traduções precisas e estruturadas.
 
+### 🎥 Demonstração em Vídeo
+- Link do vídeo demonstrando o uso do Agente de IA: https://www.youtube.com/watch?v=2OQvOgXMn2M
+
+### 🚀 Teste Agora
+- Experimente o sistema funcionando em tempo real: https://cpctranslator.streamlit.app/
+
 ---
 
 ✔️ 1. Desenho da arquitetura do sistema e explicação de funcionamento.
@@ -217,12 +223,3 @@ Comparação sistemática entre:
 fórmulas produzidas,
 traduções inversas,
 benchmarks de lógica.
-
----
-
-### 🎥 Demonstração em Vídeo
-- Link do vídeo demonstrando o uso do Agente de IA: https://www.youtube.com/watch?v=2OQvOgXMn2M
-
-### 🚀 Teste Agora
-- Experimente o sistema funcionando em tempo real: https://cpctranslator.streamlit.app/
-
